@@ -67,7 +67,8 @@ export function markdownToHwpx(options: ConvertOptions): HwpxDocument {
 }
 
 const HWPEQN_COMBINED_RE = /\[DEQ\](.*?)\[\/DEQ\]|\[EQ\](.*?)\[\/EQ\]/g;
-const INLINE_MATH_RE = /\$(?!\$)((?:[^$\n\\]|\\.)+?)\$/g;
+const DISPLAY_MATH_RE = /\$\$([\s\S]+?)\$\$/g;
+const INLINE_MATH_RE = /\$((?:[^$\n\\]|\\.)+?)\$/g;
 
 function convertHwpEqnContent(content: string): HwpxParagraph[] {
   const paragraphs: HwpxParagraph[] = [];
@@ -111,22 +112,53 @@ function convertHwpEqnContent(content: string): HwpxParagraph[] {
 }
 
 function pushTextRuns(runs: HwpxRun[], text: string): void {
+  // 1차: $$...$$ 디스플레이 수식 추출
+  let remaining = text;
+  const displayRe = new RegExp(DISPLAY_MATH_RE.source, "g");
+  const parts: Array<{ type: "text" | "deq"; value: string }> = [];
   let cursor = 0;
-  let m: RegExpExecArray | null;
-  INLINE_MATH_RE.lastIndex = 0;
+  let dm: RegExpExecArray | null;
 
-  while ((m = INLINE_MATH_RE.exec(text)) !== null) {
-    const before = text.slice(cursor, m.index);
-    if (before) runs.push({ type: "text", text: before });
-
-    const latex = m[1].replace(/\\displaystyle/g, "").trim();
-    const hwpEqn = latexToHwpEqn(latex);
-    runs.push({ type: "equation", hwpEqn, display: false });
-    cursor = m.index + m[0].length;
+  while ((dm = displayRe.exec(remaining)) !== null) {
+    if (dm.index > cursor) {
+      parts.push({ type: "text", value: remaining.slice(cursor, dm.index) });
+    }
+    parts.push({ type: "deq", value: dm[1].trim() });
+    cursor = dm.index + dm[0].length;
+  }
+  if (cursor < remaining.length) {
+    parts.push({ type: "text", value: remaining.slice(cursor) });
+  }
+  if (parts.length === 0 && remaining) {
+    parts.push({ type: "text", value: remaining });
   }
 
-  const after = text.slice(cursor);
-  if (after) runs.push({ type: "text", text: after });
+  for (const part of parts) {
+    if (part.type === "deq") {
+      const hwpEqn = latexToHwpEqn(part.value);
+      runs.push({ type: "equation", hwpEqn, display: true });
+      continue;
+    }
+
+    // 2차: $...$ 인라인 수식 추출
+    const inlineRe = new RegExp(INLINE_MATH_RE.source, "g");
+    let ic = 0;
+    let im: RegExpExecArray | null;
+    const segment = part.value;
+
+    while ((im = inlineRe.exec(segment)) !== null) {
+      const before = segment.slice(ic, im.index);
+      if (before) runs.push({ type: "text", text: before });
+
+      const latex = im[1].replace(/\\displaystyle/g, "").trim();
+      const hwpEqn = latexToHwpEqn(latex);
+      runs.push({ type: "equation", hwpEqn, display: false });
+      ic = im.index + im[0].length;
+    }
+
+    const after = segment.slice(ic);
+    if (after) runs.push({ type: "text", text: after });
+  }
 }
 
 function convertTokens(tokens: MdToken[]): HwpxParagraph[] {
