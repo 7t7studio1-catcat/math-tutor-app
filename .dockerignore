@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.env*
+*.pyc
+__pycache__
+scripts/test_*
+scripts/graph_samples
+backups
+review-screenshots
+screenshot-*.png
+test_eq_output.hwpx
+test-pdf-batch.js
+page-source.html
