@@ -7,6 +7,8 @@
 
 export { markdownToHwpx } from "./markdown-to-hwpx";
 export { packageHwpx } from "./packager";
+export { latexToHwpEqn } from "./latex-to-hwpeqn";
+export { parseMarkdown } from "./markdown-parser";
 export type {
   HwpxDocument, HwpxSection, HwpxParagraph, HwpxRun,
   HwpxTextRun, HwpxEquationRun, HwpxImageRun,
