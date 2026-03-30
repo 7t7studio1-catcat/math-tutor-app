@@ -1,0 +1,60 @@
+---
+description: Nova AI 해체분석에서 도출한 설계 철학 — 모든 HWP/수식 작업에 적용
+alwaysApply: true
+---
+
+# Nova AI 설계 철학 (경쟁 우위 사고체계)
+
+## 핵심 원칙 5가지
+
+### 1. 변환 레이어는 악이다
+- 모든 변환 레이어는 정보 손실과 버그의 원천
+- AI가 최종 형식을 직접 생성하게 하면 변환기 자체가 불필요
+- 우리 적용: AI가 LaTeX 출력 → AI가 HwpEqn 변환 (정규식 대신 AI 지능 사용)
+
+### 2. 음성 예시가 양성 예시보다 중요하다
+- LLM은 훈련 데이터의 가장 흔한 패턴으로 확률적 회귀함
+- 모든 규칙에 "잘못된 예"를 반드시 쌍으로 제시하여 회귀 차단
+- 예: `✓ dint` / `✗ iint, int int` — 잘못된 형태를 명시적으로 나열
+
+### 3. 불확실하면 생성하지 마라
+- 할루시네이션보다 정직한 불완전성이 낫다
+- 그래프 spec 불확실 → 그래프 생성 금지
+- OCR 불명확 → 추측이라고 밝힘
+- placeholder 이미지 임의 삽입 금지
+
+### 4. 정보 유형마다 최적 경로가 다르다
+- 텍스트 → insert_text (타이핑)
+- 수식 → insert_equation (HwpEqn 직접)
+- 재현 가능한 그래프 → matplotlib 코드 실행
+- 재현 불가능한 도형 → 원본 이미지 크롭
+- 표 → 구조화 재구성
+
+### 5. 규칙의 반복은 의도적이다
+- LLM attention 강화를 위해 중요 규칙을 여러 프롬프트에서 반복
+- 한 곳에만 쓰면 context window에서 묻힘
+
+## HwpEqn 변환 시 절대 준수
+
+### AI 변환 프롬프트 위치
+`src/app/api/convert-hwpeqn/route.ts`의 `HWPEQN_SYSTEM_PROMPT`
+
+### 핵심 변환 규칙 (Nova에서 추출)
+| LaTeX | HwpEqn | 잘못된 예 |
+|-------|--------|----------|
+| `\frac{a}{b}` | `{a} over {b}` | 분자 항이 밖으로 빠짐 |
+| `\iint` | `dint` | `iint`, `int int` |
+| `\iiint` | `tint` | `iiint`, `int int int` |
+| `\partial` | `Partial` (대문자) | `partial` (소문자) |
+| `f'(x)` | `` f` prime LEFT ( x RIGHT ) `` | `yPRIME`, `y'` |
+| `\mathbf{v}` | `{rmboldv}` | `mathbfv` |
+| `\mathcal{L}` | `LAPLACE` | `mathcalL`, `calL` |
+| `\begin{cases}` | `{cases{...}}` | `LEFT lbrace` |
+| `\begin{pmatrix}` | `{pmatrix{...}}` | `PMATRIX` (대문자) |
+| `|x|` | `LEFT \| x RIGHT \|` | `vert x vert` |
+| `\{x \mid ...\}` | `` LEFT lbrace x `vert `... RIGHT rbrace `` | `LEFT \| ... RIGHT .` |
+
+## 프로젝트 목표
+- 메가스터디, 대성, 시대인재 납품
+- EBS 변형문제집 10만부 이상 판매 베스트셀러
+- Nova AI를 모든 방면에서 초월하는 품질

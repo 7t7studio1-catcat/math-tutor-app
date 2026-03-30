@@ -1,0 +1,27 @@
+---
+description: 프롬프트 엔지니어링 및 수식 표기 규칙
+globs: src/lib/prompts.ts,src/lib/variationGraphPrompts.ts,src/lib/pdfBatchPrompts.ts
+alwaysApply: false
+---
+
+# 프롬프트 & 수식 규칙
+
+## prompts.ts 구조 (910줄)
+- RULES: 교육과정 범위 + 수식 표기 규칙 A~K
+- SOLUTION_GRAPH_RULES: 그래프 JSON 출력 규칙
+- PRACTICAL_TECHNIQUES: 실전개념 사전 (거리곱, 1/6, N축 등)
+- SECTION2_SYSTEM: 정석 풀이 (가장 먼저 생성)
+- SECTION1/3/4: 문제읽기/숏컷/변형대비 (STEP 2 역추적)
+- MODE_SIMPLE/DETAILED/SHORTCUT: 사용자 선택 해설 모드
+- buildVariationPrompt: 변형문제 생성
+
+## 수식 표기 핵심 (절대 위반 금지)
+- `\displaystyle` 주입: \lim, \sum, \int, \frac 등이 인라인일 때
+- `\frac{a}{b}` 필수 (a/b 금지)
+- `f'(x)` 사용 (\prime 금지)
+- `\iint` 사용 (\int\int 금지)
+- 집합: `\{`, `\}`, `\mid`
+- cases 환경 필수 (\left\{ 금지)
+
+## 실전개념 3단계 패턴
+①이름 **굵게** 소개 → ②왜 적용 가능한지 1줄 → ③적용 계산

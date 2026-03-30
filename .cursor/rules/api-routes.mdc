@@ -1,0 +1,25 @@
+---
+description: API 라우트 작성 규칙
+globs: src/app/api/**/*.ts
+alwaysApply: false
+---
+
+# API 라우트 규칙
+
+## SSE 스트리밍 패턴 (analyze, pdf-solve)
+- `ReadableStream` + `TextEncoder`로 직접 제어
+- **heartbeat ping** 필수: `setInterval(() => send(": ping\n\n"), 5000~12000)`
+- Gemini `thought` 파트는 건너뜀: `if (part.thought) continue`
+- 종료: `data: [DONE]\n\n` 전송 후 `ctrl.close()`
+- 에러: `data: {error: "..."}` 전송 후 정상 종료
+
+## Gemini API 호출
+- REST 직접 호출: `generativelanguage.googleapis.com/v1beta/models/`
+- 풀이: `gemini-3.1-pro-preview`, thinkingBudget 16384
+- 메타/수식: `gemini-2.5-flash`
+- API 키: `process.env.GEMINI_API_KEY` (하드코딩 금지)
+
+## HWPX 비동기 (export-ts)
+- `defer: true` 또는 `X-Hwpx-Async: 1` → 202 + jobId 반환
+- 백그라운드 생성 → exportTsJobs Map에 저장
+- 클라이언트: /api/export-ts/status 폴링

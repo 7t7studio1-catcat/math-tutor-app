@@ -1,0 +1,32 @@
+---
+description: HWPX 생성 파이프라인 규칙
+globs: src/lib/hwpx/**/*.ts
+alwaysApply: false
+---
+
+# HWPX 파이프라인
+
+## 구조
+1. `generateHwpx(options)` → `markdownToHwpx()` → `packageHwpx()`
+2. markdown-to-hwpx: 마크다운 → HwpxDocument 모델
+3. packager: HwpxDocument → OWPML ZIP (archiver, store 모드)
+
+## OWPML ZIP 구조
+```
+mimetype (application/hwp+zip)
+version.xml / settings.xml
+META-INF/container.xml, manifest.xml, container.rdf
+Contents/content.hpf, header.xml, section0.xml
+Contents/BinData/[이미지들]
+Preview/PrvText.txt
+```
+
+## 출판사 스타일 (styles.ts)
+5개 프리셋: default, megastudy, daesung, sidaein, ebs
+각 프리셋: settings(판형/여백), fonts, colors, layout
+
+## 주의
+- XML은 문자열 연결로 생성 (DOM 아님) — 특수문자 이스케이프 주의
+- UTF-8 BOM 없이 `Buffer.from(str, "utf-8")`
+- archiver `store: true` (무압축) — 한글 프로그램 호환성
+- HwpxEquationRun.hwpEqn은 HwpEqn 문법 (LaTeX 아님)

@@ -1,0 +1,26 @@
+---
+description: 상태 관리 및 서비스 레이어 규칙
+globs: src/stores/**/*.ts,src/services/**/*.ts
+alwaysApply: false
+---
+
+# 스토어 & 서비스 규칙
+
+## Zustand 패턴
+- `create<Interface>((set) => ({...}))`
+- 불변 업데이트: `set((state) => ({...}))`
+- 스토어 간 직접 import 없음 (독립적)
+- 배럴: `src/stores/index.ts`
+
+## SectionTuple
+`[SectionState, SectionState, SectionState, SectionState]` — 4개 고정
+각 섹션: `{status, content, error}`
+
+## 서비스 레이어
+- `analyzeService.ts`: SSE 스트리밍 + 재시도 3회 + abort 관리
+- `exportService.ts`: COM→TS 폴백, trycloudflare 비동기 감지
+- `pdfIdentifyService.ts`: Canvas 크롭으로 문제 이미지 추출
+- `graphService.ts`: mafs 그래프 프리렌더링
+
+## 서비스 호출 패턴
+컴포넌트 → 서비스 함수 → fetch("/api/...") → API 라우트 → Gemini

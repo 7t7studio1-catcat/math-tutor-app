@@ -1,0 +1,23 @@
+---
+description: 스마트풀이 프로젝트 전체 구조와 규칙. 모든 작업 전에 참조.
+alwaysApply: true
+---
+
+# 스마트풀이 (math-tutor-app) 시스템
+
+수능 수학 AI 해설 + 변형문제 + 출판사 HWPX 납품 앱.
+**상세 문서는 프로젝트 루트 `AGENTS.md` 참조.**
+
+## 스택
+Next.js 16 App Router · React 19 · TypeScript · Tailwind 4 · Zustand · Gemini API
+
+## 핵심 흐름
+1. 이미지/PDF 업로드 → Gemini SSE 스트리밍 → 4단계 해설
+2. STEP 2(정석풀이) 먼저 → STEP 1,3,4 병렬
+3. HWPX 내보내기: LaTeX→HwpEqn(Gemini) → markdown→HWPX → ZIP
+
+## 절대 규칙
+- 수능 수식 표기법 준수 (`\displaystyle` 필수, `\frac` 필수, `f'(x)` 사용)
+- `.env.local` 절대 커밋 금지
+- 한국어 응답, 출판 품질 목표
+- 근본적 해결 우선 (시간·비용 무제한)

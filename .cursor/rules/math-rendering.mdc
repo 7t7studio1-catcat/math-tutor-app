@@ -1,0 +1,73 @@
+---
+description: 수학 렌더링 — 그래프, 수식 조판, KaTeX, HWPX 관련 절대 규칙
+alwaysApply: true
+---
+
+# 수학 렌더링 규칙 (절대 변경 금지)
+
+## 웹 그래프 (GraphRenderer.tsx)
+
+### 라벨 렌더링: foreignObject + KaTeX
+- 그래프 라벨은 SVG `<foreignObject>` 안에 `katex.renderToString()`으로 렌더링
+- 수학 조판 규칙은 KaTeX가 자동 처리 (이탤릭/로만 구분)
+- SVG `<text>` 수동 조판 절대 금지 — KaTeX가 유일한 수학 렌더러
+
+### LabelCtx 문맥 타입
+```
+type LabelCtx = "func" | "point" | "value";
+```
+- `func`: 함수 라벨 (y=f(x)) — KaTeX 기본 (변수 이탤릭, sin/cos 로만)
+- `point`: 점 라벨 (P, (s,f(s))) — 대문자를 `\mathrm{}` 래핑 (점 이름 로만)
+- `value`: vLine/hLine (x=2) — 대문자 `\mathrm{}` 래핑
+
+### 물리 시뮬레이션
+- 30회 반복, 그리드 탐색 0.05×0.07, 충돌 버퍼 10/8px
+- 원점 O, x, y 라벨을 장애물로 등록
+- 곡선 반발 임계 20px, 곡선 샘플링 1000점, step 2px
+
+### SVG 상수
+- viewBox: 280×272, DISPLAY_MAX: 280, PAD: {18,28,28,28}
+- 곡선 strokeWidth: 1.5, 축: 0.9, 점 r: 4.2
+- HALO: drop-shadow CSS (foreignObject용)
+- 폰트: Times New Roman (SVG 폴백용, KaTeX가 주 렌더러)
+
+## HWPX 그래프 (graph_generator.py)
+
+### Matplotlib 스타일
+- mathtext.fontset: "stix"
+- 모든 라벨에 `fontfamily=["STIXGeneral", "Times New Roman", "serif"]`
+- 점 라벨: 단일 대문자(P,A,B) → roman, 나머지 → italic
+- 함수 라벨: fontstyle="italic" + STIX 세리프
+- figsize: (3.2, 3.1), vLine/hLine 라벨은 축 레벨에 배치
+
+### 한글 폰트 fallback 순서
+맑은 고딕 → 나눔고딕 → 함초롬바탕 → 바탕 → Batang → 굴림
+최후 fallback: Windows/Fonts에서 malgun.ttf 직접 로드
+
+## KaTeX CSS (globals.css)
+
+### 디스플레이 수식
+- margin: 1.2rem, padding: 1rem 1.8rem
+- border-left: 3px solid rgba(99,102,241,0.35)
+- 연속 display 간격 압축: margin-top: -0.4rem
+
+### 인라인 수식
+- font-size: 1.2em, font-weight: 500
+- .mrel margin: 0 0.35em (등호 간격)
+
+### 본문 행간
+- .prose-math p, li: line-height 2.1 (교재급)
+
+## HWPX 수식 (latex_to_hwpeqn.py)
+
+### 그리스 문자 변환
+- `\alpha` → ` alpha ` (앞뒤 공백 필수! 키워드 경계 보장)
+- 모든 그리스 문자, infty, partial, nabla, ell 동일
+
+### 같지 않다 기호
+- `\neq`, `\ne` → `!=` (HWP 수식에서 ≠ 렌더링)
+- `<>` 절대 사용 금지
+
+### 글자 크기 (design_themes.py FONT)
+- body: 11pt, equation: 11pt, equation_lg: 12pt
+- 분수 포함 인라인: equation - 0.5 = 10.5pt

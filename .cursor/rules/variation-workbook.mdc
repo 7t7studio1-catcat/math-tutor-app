@@ -1,0 +1,67 @@
+---
+description: 변형문제 워크북 생성 규칙 — 와아아.pdf 양식, 2단 레이아웃
+globs: scripts/hwpx_workbook_generator.py, src/app/api/export-workbook/**
+alwaysApply: false
+---
+
+# 변형문제 워크북 규칙
+
+## 출력 양식 (와아아.pdf 기준)
+
+### 문제 영역 (2단)
+```
+─────────────────
+■ 원본 문제          01 변형 1
+[AI 타이핑 텍스트]    ─────────────────
+                     [문제 본문]
+                     ① ② ③ ④ ⑤
+─────────────────    ─────────────────
+02 변형 2            03 변형 3
+...                  ...
+```
+
+### 정답 및 풀이 (2단)
+```
+정답 및 풀이
+━━━━━━━━━━━━━━━━
+▐01. 정답 ④           ▐02. 정답 ③
+[변형 포인트] ...      [변형 포인트] ...
+[간단 풀이]            [간단 풀이]
+...                    ...
+```
+
+## 마크다운 파싱 규칙
+
+### 변형문제 추출
+- `VARIATION_EXTRACT_RE`: 정답 섹션 **이전**에서만 추출 (이중 삽입 방지)
+- `## 원본 문제` → `## 문제` 사이에서 원본 텍스트 추출
+
+### 정답 추출
+- `SINGLE_ANSWER_RE`: named group `n1`/`n2`/`ans`/`rest`
+- 두 형식 매칭: `■ N. 정답 X` 또는 `**변형 N [정답]** X`
+
+## 프롬프트 규칙 (prompts.ts buildVariationPrompt)
+
+### 객관식
+- 반드시 ①~⑤ 정확히 5개 선택지 (4개 이하·6개 이상 금지)
+
+### 주관식
+- 정답은 반드시 1~999 자연수 (0, 음수, 분수, 소수 금지)
+
+### 그래프
+- 원본에 그래프 없으면 → 변형문제에도 그래프 금지
+- 풀이에서는 필요 시 자유롭게 그래프 가능
+
+### 원본 문제
+- AI가 `## 원본 문제` 섹션에서 원본을 직접 타이핑 (검증용)
+- 이미지보다 AI 텍스트를 우선 사용
+
+## 한글 내보내기 흐름
+```
+page.tsx (taskMode==="variation")
+  → /api/export-workbook
+    → /api/convert-hwpeqn (AI: LaTeX→HwpEqn)
+    → Python hwpx_workbook_generator.py
+      → [EQ] 마커 있으면: _process_content_hwpeqn_direct (변환 우회)
+      → 마커 없으면: parse_markdown → latex_to_hwpeqn (폴백)
+```

@@ -1,0 +1,250 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+html { scroll-behavior: smooth; }
+
+/* ─── Apple Light ─── */
+:root {
+  --bg-base:    #F5F5F7;
+  --bg-card:    rgba(255, 255, 255, 0.72);
+  --bg-card-solid: #FFFFFF;
+  --bg-inset:   rgba(0, 0, 0, 0.035);
+  --border:     rgba(0, 0, 0, 0.08);
+  --text-1:     #1D1D1F;
+  --text-2:     #6E6E73;
+  --text-3:     #86868B;
+  --text-4:     #AEAEB2;
+  --text-5:     #C7C7CC;
+  --math-bg:    rgba(0, 0, 0, 0.02);
+  --math-border: rgba(0, 0, 0, 0.06);
+  --shadow:     0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg:  0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --glass-blur: 20px;
+}
+
+/* ─── Apple Dark ─── */
+.dark {
+  --bg-base:    #000000;
+  --bg-card:    rgba(28, 28, 30, 0.72);
+  --bg-card-solid: #1C1C1E;
+  --bg-inset:   rgba(255, 255, 255, 0.04);
+  --border:     rgba(255, 255, 255, 0.1);
+  --text-1:     #F5F5F7;
+  --text-2:     #A1A1A6;
+  --text-3:     #6E6E73;
+  --text-4:     #48484A;
+  --text-5:     #3A3A3C;
+  --math-bg:    rgba(255, 255, 255, 0.03);
+  --math-border: rgba(255, 255, 255, 0.08);
+  --shadow:     0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-lg:  0 4px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.2);
+}
+
+body {
+  @apply antialiased;
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, "Noto Sans KR", sans-serif;
+  font-size: 16px;
+  background-color: var(--bg-base);
+  min-height: 100vh;
+  color: var(--text-1);
+  transition: background-color 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Glass Card ─── */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.glass-lg {
+  background: var(--bg-card);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── Shimmer ─── */
+.shimmer-text {
+  background: linear-gradient(90deg, #0071E3 0%, #BF5AF2 40%, #0071E3 80%);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+/* ─── KaTeX — 수능 시험지 스타일 ─── */
+
+/* 디스플레이 수식 블록 — 교재급 */
+.prose-math .katex-display {
+  margin: 1.2rem 0;
+  padding: 1rem 1.8rem;
+  background: var(--math-bg);
+  text-align: center;
+  border-radius: 0 10px 10px 0;
+  border: 1px solid var(--math-border);
+  border-left: 3px solid rgba(99, 102, 241, 0.35);
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.prose-math .katex-display::-webkit-scrollbar { display: none; }
+
+/* ── 수능 스타일 핵심: 크기·굵기·선명도 ── */
+
+/* 인라인 수식 — 본문보다 약간 크게 */
+.prose-math .katex {
+  font-size: 1.2em;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 디스플레이 수식 — 수능 시험지처럼 크고 선명하게 */
+.prose-math .katex-display > .katex {
+  font-size: 1.45em;
+  white-space: nowrap;
+}
+
+/* 분수 바 — 수능처럼 두껍고 선명하게 */
+.prose-math .katex .frac-line {
+  border-bottom-width: 0.08em !important;
+  min-height: 0.08em !important;
+}
+
+/* 루트 기호 — 선 굵기 강화 */
+.prose-math .katex .sqrt > .sqrt-sign {
+  font-weight: 700;
+}
+.prose-math .katex .sqrt-line {
+  border-bottom-width: 0.08em !important;
+  min-height: 0.08em !important;
+}
+
+/* 극한·합·적분 기호 크기 — KaTeX 기본값 유지 */
+
+/* lim, sin, cos 등 함수명 — 수능처럼 로만체로 또렷하게 */
+.prose-math .katex .mop {
+  font-weight: 500;
+}
+
+/* 변수 글자 — 이탤릭 살짝 강조 */
+.prose-math .katex .mord.mathnormal {
+  letter-spacing: 0.03em;
+}
+
+/* 등호·부등호 주변 넓은 간격 — 수능 스타일 */
+.prose-math .katex .mrel {
+  margin: 0 0.35em;
+}
+
+/* 괄호류 — 수능처럼 얇지 않게 */
+.prose-math .katex .mopen,
+.prose-math .katex .mclose {
+  font-weight: 500;
+}
+.prose-math .katex .delimsizing {
+  font-weight: 500;
+}
+
+/* 위첨자·아래첨자 — 수능처럼 적당한 크기 유지 */
+.prose-math .katex .msupsub .vlist-t {
+  font-size: 0.88em;
+}
+
+/* 인라인 수식 세로 정렬 — 분수·첨자가 있어도 행간 유지 */
+.prose-math .katex-inline {
+  vertical-align: -0.35em;
+  padding: 0 0.15em;
+}
+.prose-math .katex .mfrac {
+  vertical-align: middle;
+}
+
+/* 본문 행간 — 교재급 가독성 (수능 교재 기준 2.0~2.2) */
+.prose-math p { line-height: 2.1; }
+.prose-math li { line-height: 2.1; }
+
+/* cases 환경 — 구간별 정의 함수 가독성 */
+.prose-math .katex .mord .mtable .col-align-l { padding-left: 0.3em; }
+.prose-math .katex .mord .mtable .arraycolsep { width: 0.8em; }
+
+/* 연속 디스플레이 수식 — 교재처럼 간격 압축 */
+.prose-math .katex-display + .katex-display { margin-top: -0.4rem; }
+
+/* 디스플레이 수식 안 케이스 — 여백 확보 */
+.prose-math .katex .amscd, .prose-math .katex .cases { padding: 0.2em 0; }
+
+
+
+
+@media (max-width: 640px) {
+  .prose-math .katex { font-size: 1.1em; }
+  .prose-math .katex-display > .katex { font-size: 1.25em; }
+  .prose-math .katex-display { padding: 0.75rem 1rem; margin: 1rem 0; }
+}
+
+@media (pointer: coarse) {
+  button { min-height: 44px; min-width: 44px; }
+}
+
+.dark .prose-math .katex {
+  color: #F5F5F7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Mafs ─── */
+.MafsView {
+  --mafs-bg: var(--bg-base) !important;
+  --mafs-fg: var(--text-3) !important;
+  --mafs-line-color: var(--border) !important;
+}
+.MafsView text {
+  font-family: "SF Mono", "Fira Mono", ui-monospace, monospace !important;
+  font-size: 12px !important;
+  fill: var(--text-2) !important;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ─── 인쇄 ─── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; color: #1D1D1F !important; }
+  .print\:hidden { display: none !important; }
+  @page { margin: 15mm; size: A4; }
+
+  .section-before, .section-during, .section-after {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem;
+    border: 1px solid #E5E5EA !important;
+    border-radius: 16px;
+    overflow: hidden;
+    background: white !important;
+  }
+  .section-before { border-top: 3px solid #BF5AF2 !important; }
+  .section-during { border-top: 3px solid #0071E3 !important; }
+  .section-after  { border-top: 3px solid #FF9F0A !important; }
+
+  .prose-math .katex-display {
+    background: #F5F5F7 !important;
+    border: 1px solid #E5E5EA !important;
+    border-left: 3px solid #6366f1 !important;
+    border-radius: 0 12px 12px 0 !important;
+  }
+}

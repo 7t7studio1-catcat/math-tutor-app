@@ -1,0 +1,66 @@
+---
+description: HWPX 한글파일 생성 — 아키텍처, 수식 변환, 워크북 규칙
+alwaysApply: true
+---
+
+# HWPX 생성 아키텍처 (납품급)
+
+## 수식 변환 (현재 운영 기준)
+
+### 워크북·멀티워크북 (`workbook`, `workbook-multi`)
+- **`/api/export` POST 안에서 Gemini로 일괄 HwpEqn 변환을 호출하지 않음** — Cloudflare Tunnel 등 **~100초 제한** 회피.
+- LaTeX → HwpEqn은 **`scripts/latex_to_hwpeqn.py`** + 마크다운 파이프가 본체라고 보면 됨.
+
+### 통합 export 라우트
+- `src/app/api/export/route.ts` 단일 진입 → `python -m scripts.hwpx`.
+- `convertSectionsToHwpEqn` 등은 코드에 남아 있어도 **워크북 분기에서 실제 호출 금지** 유지.
+
+### TS 폴백
+- `/api/export-ts` — 네이티브 수식 없음, 텍스트 위주. **납품 품질 목표 경로 아님.**
+
+### 레거시 참고
+- 과거 별도 `export-workbook` + AI 마커 파이프는 **통합 `/api/export`로 흡수**된 상태를 전제로 문서를 읽을 것.
+
+## 수식 렌더링 (pyhwpx 패턴)
+
+### insert_equation 흐름
+1. `EquationCreate` + `HEqEdit` — 수식 생성
+2. `_equation_refresh()` — 삽입 직후 호출(배치+스레드 방식은 COM 단일 스레드 이슈로 제거됨)
+3. `EquationPropertyDialog` — TreatAsChar 설정 (필요 시)
+
+### 방정식 폰트
+- `EqFontName`: **`HYhwpEQ`** (한글 네이티브 수식에 맞춤)
+
+### LaTeX→HwpEqn 규칙 요약 (`latex_to_hwpeqn.py`)
+- `\{` `\}` → `LEFT lbrace` / `RIGHT rbrace`
+- `\pm` → `+-`, `\mp` → `-+`
+- 보이지 않는 방향 제어 문자(LRI/RLI 등) 제거 — 방정식 네모/깨짐 방지
+
+### _equation_refresh 핵심 코드 (절대 변경 금지)
+```python
+pset = hwp.HParameterSet.HEqEdit
+hwp.HAction.GetDefault("EquationModify", pset.HSet)
+pset.string = pset.VisualString
+pset.Version = "Equation Version 60"
+hwp.HAction.Execute("EquationModify", pset.HSet)
+```
+- `EquationPropertyDialog`(HShapeObject)가 아닌 `EquationModify`(HEqEdit) 사용이 핵심
+- 전자는 모양 속성만, 후자는 수식 내용 재처리 → 폰트 재렌더링
+
+## 워크북 생성기 (hwpx_workbook_generator.py)
+
+### 마크다운 파싱 → 구조 추출
+- `ORIGINAL_PROBLEM_RE` — AI가 타이핑한 원본 문제 추출
+- `VARIATION_EXTRACT_RE` — 정답 섹션 이전에서만 변형문제 추출 (이중 삽입 방지)
+- `SINGLE_ANSWER_RE` — named group(`n1`, `n2`, `ans`, `rest`)으로 두 형식 모두 매칭
+
+### 레이아웃
+- 2단 다단: `setup_two_column()` + `column_break()`
+- 원본 이미지: 최대 70×90mm, AI 텍스트 우선 / 이미지 폴백
+- 그래프: 최대 55×50mm (WB_GRAPH_MAX_W/H)
+- 본문 폰트: 8pt 기준, 나머지 비례
+
+## 메타텍스트 3중 방어
+- Layer 1: AI 프롬프트 (prompts.ts) — 안내문구 출력 금지
+- Layer 2: 웹 전처리 (mathPreprocess.ts) — 파트N 등 제거
+- Layer 3: Python (DUPLICATE_HEADING_PATTERNS) — 9개 패턴 search
